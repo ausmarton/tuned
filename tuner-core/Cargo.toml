@@ -1,0 +1,54 @@
+[package]
+name        = "tuner-core"
+version     = "0.1.0"
+edition     = "2021"
+rust-version = "1.75"
+license     = "GPL-3.0-or-later"
+description = "DSP core for OpenTuner: pitch detection, strum analysis, chord recognition for guitar, bass and guitarra portuguesa."
+repository  = "https://github.com/opentuner/opentuner"
+readme      = "../README.md"
+keywords    = ["audio", "dsp", "tuner", "music", "pitch-detection"]
+categories  = ["multimedia::audio", "no-std"]
+
+[lib]
+crate-type = ["rlib", "cdylib", "staticlib"]
+
+[features]
+default = ["std"]
+std     = []
+jni     = ["std", "dep:jni"]
+wasm    = ["std", "dep:wasm-bindgen", "dep:js-sys"]
+
+[dependencies]
+rustfft       = { version = "6.2", default-features = false }
+num-complex   = { version = "0.4", default-features = false }
+libm          = "0.2"
+
+jni           = { version = "0.21", optional = true }
+wasm-bindgen  = { version = "0.2", optional = true }
+js-sys        = { version = "0.3", optional = true }
+log           = { version = "0.4", optional = true }
+
+[dev-dependencies]
+proptest      = "1"
+approx        = "0.5"
+criterion     = { version = "0.5", features = ["html_reports"] }
+hound         = "3.5"
+
+# NOTE: the MSRV pins listed in HANDOFF.md §5 were only needed on Rust 1.75
+# (the previous session's sandbox). This crate is built on Rust 1.96, so the
+# pins are intentionally omitted and cargo selects compatible versions.
+
+[[bench]]
+name    = "pitch_bench"
+harness = false
+
+[profile.release]
+lto           = "fat"
+codegen-units = 1
+panic         = "abort"
+opt-level     = 3
+
+[profile.bench]
+inherits = "release"
+debug    = true
