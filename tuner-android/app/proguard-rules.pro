@@ -1,0 +1,3 @@
+-keep class com.opentuner.NativeTuner { *; }
+-keep class com.opentuner.Snapshot { *; }
+-keepclassmembers class com.opentuner.NativeTuner { native <methods>; }
