@@ -26,9 +26,12 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tuner-core
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: rustsec/audit-check@v1.4.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: cargo install cargo-audit --locked
+      - run: cargo generate-lockfile
+      - run: cargo audit
