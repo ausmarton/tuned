@@ -31,37 +31,40 @@ class AudioEngine(
     @SuppressLint("MissingPermission")
     fun start(scope: CoroutineScope) {
         if (job?.isActive == true) return
-        val minBuf = AudioRecord.getMinBufferSize(
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_FLOAT,
-        )
-        val framesPerRead = 2048
-        val bufferBytes = maxOf(minBuf, framesPerRead * 4 * 2)
-
-        job = scope.launch(Dispatchers.IO) {
-            val record = AudioRecord(
-                MediaRecorder.AudioSource.UNPROCESSED,
+        val minBuf =
+            AudioRecord.getMinBufferSize(
                 sampleRate,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_FLOAT,
-                bufferBytes,
             )
-            try {
-                record.startRecording()
-                val buf = FloatArray(framesPerRead)
-                while (isActive) {
-                    val n = record.read(buf, 0, buf.size, AudioRecord.READ_BLOCKING)
-                    if (n > 0) {
-                        tuner.pushSamples(if (n == buf.size) buf else buf.copyOf(n))
+        val framesPerRead = 2048
+        val bufferBytes = maxOf(minBuf, framesPerRead * 4 * 2)
+
+        job =
+            scope.launch(Dispatchers.IO) {
+                val record =
+                    AudioRecord(
+                        MediaRecorder.AudioSource.UNPROCESSED,
+                        sampleRate,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_FLOAT,
+                        bufferBytes,
+                    )
+                try {
+                    record.startRecording()
+                    val buf = FloatArray(framesPerRead)
+                    while (isActive) {
+                        val n = record.read(buf, 0, buf.size, AudioRecord.READ_BLOCKING)
+                        if (n > 0) {
+                            tuner.pushSamples(if (n == buf.size) buf else buf.copyOf(n))
+                        }
+                        ensureActive()
                     }
-                    ensureActive()
+                } finally {
+                    runCatching { record.stop() }
+                    record.release()
                 }
-            } finally {
-                runCatching { record.stop() }
-                record.release()
             }
-        }
     }
 
     fun stop() {

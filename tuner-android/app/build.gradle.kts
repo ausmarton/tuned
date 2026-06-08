@@ -1,4 +1,3 @@
-import org.gradle.api.tasks.Exec
 import java.io.File
 
 plugins {
@@ -78,28 +77,31 @@ dependencies {
 // Requires a Rust toolchain with the Android targets installed and the NDK
 // (ANDROID_NDK_HOME or NDK_HOME).
 
-val abiToTriple = mapOf(
-    "arm64-v8a" to "aarch64-linux-android",
-    "armeabi-v7a" to "armv7-linux-androideabi",
-    "x86_64" to "x86_64-linux-android",
-    "x86" to "i686-linux-android",
-)
+val abiToTriple =
+    mapOf(
+        "arm64-v8a" to "aarch64-linux-android",
+        "armeabi-v7a" to "armv7-linux-androideabi",
+        "x86_64" to "x86_64-linux-android",
+        "x86" to "i686-linux-android",
+    )
 
-val abiToLinker = mapOf(
-    "arm64-v8a" to "aarch64-linux-android26-clang",
-    "armeabi-v7a" to "armv7a-linux-androideabi26-clang",
-    "x86_64" to "x86_64-linux-android26-clang",
-    "x86" to "i686-linux-android26-clang",
-)
+val abiToLinker =
+    mapOf(
+        "arm64-v8a" to "aarch64-linux-android26-clang",
+        "armeabi-v7a" to "armv7a-linux-androideabi26-clang",
+        "x86_64" to "x86_64-linux-android26-clang",
+        "x86" to "i686-linux-android26-clang",
+    )
 
 tasks.register("buildRustCore") {
     group = "build"
     description = "Cross-compiles tuner-core (JNI) for every Android ABI."
     doLast {
         val coreDir = rootProject.projectDir.parentFile.resolve("tuner-core")
-        val ndkHome = System.getenv("ANDROID_NDK_HOME")
-            ?: System.getenv("NDK_HOME")
-            ?: throw GradleException("Set ANDROID_NDK_HOME (or NDK_HOME) to build the Rust core.")
+        val ndkHome =
+            System.getenv("ANDROID_NDK_HOME")
+                ?: System.getenv("NDK_HOME")
+                ?: throw GradleException("Set ANDROID_NDK_HOME (or NDK_HOME) to build the Rust core.")
         val hostTag = "linux-x86_64" // adjust for macOS/Windows hosts
         val toolchainBin = File(ndkHome, "toolchains/llvm/prebuilt/$hostTag/bin")
 
@@ -112,9 +114,13 @@ tasks.register("buildRustCore") {
                 environment(envVar, linker)
                 environment("CC_$triple", linker)
                 commandLine(
-                    "cargo", "build", "--release",
-                    "--features", "jni",
-                    "--target", triple,
+                    "cargo",
+                    "build",
+                    "--release",
+                    "--features",
+                    "jni",
+                    "--target",
+                    triple,
                 )
             }
 
@@ -126,8 +132,6 @@ tasks.register("buildRustCore") {
     }
 }
 
-tasks.whenTaskAdded {
-    if (name == "preBuild") {
-        dependsOn("buildRustCore")
-    }
+tasks.named("preBuild") {
+    dependsOn("buildRustCore")
 }

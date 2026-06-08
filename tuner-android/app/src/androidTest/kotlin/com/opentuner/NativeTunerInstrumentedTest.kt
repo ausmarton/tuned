@@ -16,8 +16,11 @@ import kotlin.math.sin
  */
 @RunWith(AndroidJUnit4::class)
 class NativeTunerInstrumentedTest {
-    private fun sine(freq: Double, sampleRate: Int, n: Int): FloatArray =
-        FloatArray(n) { i -> (0.5 * sin(2.0 * PI * freq * i / sampleRate)).toFloat() }
+    private fun sine(
+        freq: Double,
+        sampleRate: Int,
+        n: Int,
+    ): FloatArray = FloatArray(n) { i -> (0.5 * sin(2.0 * PI * freq * i / sampleRate)).toFloat() }
 
     @Test
     fun nativeLibraryLoadsAndBuildsTuner() {

@@ -13,12 +13,13 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /** The four tunings offered in the UI, in display order. */
-val SUPPORTED_TUNINGS = listOf(
-    "guitar.standard" to "Guitar — Standard (E A D G B E)",
-    "bass.standard" to "Bass — Standard (E A D G)",
-    "guitarra.lisboa" to "Guitarra Portuguesa — Lisboa",
-    "guitarra.coimbra" to "Guitarra Portuguesa — Coimbra",
-)
+val SUPPORTED_TUNINGS =
+    listOf(
+        "guitar.standard" to "Guitar — Standard (E A D G B E)",
+        "bass.standard" to "Bass — Standard (E A D G)",
+        "guitarra.lisboa" to "Guitarra Portuguesa — Lisboa",
+        "guitarra.coimbra" to "Guitarra Portuguesa — Coimbra",
+    )
 
 data class TunerUiState(
     val isRunning: Boolean = false,
@@ -39,12 +40,13 @@ class TunerViewModel : ViewModel() {
         if (_state.value.isRunning) return
         engine.start(viewModelScope)
         _state.update { it.copy(isRunning = true) }
-        pollJob = viewModelScope.launch {
-            while (isActive) {
-                _state.update { it.copy(snapshot = tuner.snapshot()) }
-                delay(50)
+        pollJob =
+            viewModelScope.launch {
+                while (isActive) {
+                    _state.update { it.copy(snapshot = tuner.snapshot()) }
+                    delay(50)
+                }
             }
-        }
     }
 
     fun stop() {

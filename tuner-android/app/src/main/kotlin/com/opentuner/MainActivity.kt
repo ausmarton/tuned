@@ -57,8 +57,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun ensurePermissionThen(action: () -> Unit) {
-        val granted = checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
-            PackageManager.PERMISSION_GRANTED
+        val granted =
+            checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED
         if (granted) {
             action()
         } else {
@@ -69,13 +70,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TunerScreen(vm: TunerViewModel, onStart: () -> Unit) {
+fun TunerScreen(
+    vm: TunerViewModel,
+    onStart: () -> Unit,
+) {
     val state by vm.state.collectAsState()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -98,7 +103,10 @@ fun TunerScreen(vm: TunerViewModel, onStart: () -> Unit) {
 }
 
 @Composable
-fun TuningPicker(currentId: String, onSelect: (String) -> Unit) {
+fun TuningPicker(
+    currentId: String,
+    onSelect: (String) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     val label = SUPPORTED_TUNINGS.firstOrNull { it.first == currentId }?.second ?: currentId
 
@@ -134,11 +142,12 @@ fun PitchDisplay(snapshot: Snapshot?) {
         Text(hz?.let { "%.1f Hz".format(it) } ?: "")
         Text(
             cents?.let {
-                val dir = when {
-                    abs(it) <= 5f -> "in tune"
-                    it < 0 -> "♭ flat"
-                    else -> "♯ sharp"
-                }
+                val dir =
+                    when {
+                        abs(it) <= 5f -> "in tune"
+                        it < 0 -> "♭ flat"
+                        else -> "♯ sharp"
+                    }
                 "%+.1f cents · %s".format(it, dir)
             } ?: "",
         )

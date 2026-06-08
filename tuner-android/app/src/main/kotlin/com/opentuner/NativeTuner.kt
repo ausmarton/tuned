@@ -40,10 +40,24 @@ class NativeTuner(
         if (h != 0L) nativeFree(h)
     }
 
-    private external fun nativeNew(tuningId: String, sampleRate: Int, a4: Double): Long
+    private external fun nativeNew(
+        tuningId: String,
+        sampleRate: Int,
+        a4: Double,
+    ): Long
+
     private external fun nativeFree(handle: Long)
-    private external fun nativePushSamples(handle: Long, samples: FloatArray)
-    private external fun nativeSetTuning(handle: Long, tuningId: String): Int
+
+    private external fun nativePushSamples(
+        handle: Long,
+        samples: FloatArray,
+    )
+
+    private external fun nativeSetTuning(
+        handle: Long,
+        tuningId: String,
+    ): Int
+
     private external fun nativeSnapshot(handle: Long): Snapshot?
 
     companion object {
