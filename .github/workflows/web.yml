@@ -1,0 +1,32 @@
+name: tuner-web
+on:
+  push:
+    paths: [tuner-web/**, tuner-core/**, .github/workflows/web.yml]
+  pull_request:
+    paths: [tuner-web/**, tuner-core/**, .github/workflows/web.yml]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: tuner-web/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tuner-core
+      - uses: jetli/wasm-pack-action@v0.4.0
+      - run: npm ci
+        working-directory: tuner-web
+      - run: npm run build
+        working-directory: tuner-web
+      - run: npm test
+        working-directory: tuner-web
+      - run: npm run lint
+        working-directory: tuner-web

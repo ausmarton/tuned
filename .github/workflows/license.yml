@@ -1,0 +1,12 @@
+name: license
+on: [push, pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify LICENSE is the canonical GPL-3.0 text
+        run: |
+          echo "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986  LICENSE" \
+            | sha256sum -c -
