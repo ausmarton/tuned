@@ -35,6 +35,16 @@ class NativeTuner(
         return if (h != 0L) nativeSnapshot(h) else null
     }
 
+    fun analyseStrum(): StrumReport? {
+        val h = handle.get()
+        return if (h != 0L) TunerJson.parseStrum(nativeAnalyseStrumJson(h)) else null
+    }
+
+    fun recogniseChord(): ChordResult? {
+        val h = handle.get()
+        return if (h != 0L) TunerJson.parseChord(nativeRecogniseChordJson(h)) else null
+    }
+
     override fun close() {
         val h = handle.getAndSet(0L)
         if (h != 0L) nativeFree(h)
@@ -59,6 +69,10 @@ class NativeTuner(
     ): Int
 
     private external fun nativeSnapshot(handle: Long): Snapshot?
+
+    private external fun nativeAnalyseStrumJson(handle: Long): String
+
+    private external fun nativeRecogniseChordJson(handle: Long): String
 
     companion object {
         init {

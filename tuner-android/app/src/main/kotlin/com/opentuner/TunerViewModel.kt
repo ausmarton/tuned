@@ -25,6 +25,9 @@ data class TunerUiState(
     val isRunning: Boolean = false,
     val tuningId: String = "guitar.standard",
     val snapshot: Snapshot? = null,
+    val strum: StrumReport? = null,
+    val chord: ChordResult? = null,
+    val error: String? = null,
 )
 
 class TunerViewModel : ViewModel() {
@@ -38,8 +41,12 @@ class TunerViewModel : ViewModel() {
 
     fun start() {
         if (_state.value.isRunning) return
-        engine.start(viewModelScope)
-        _state.update { it.copy(isRunning = true) }
+        val started = engine.start(viewModelScope)
+        if (!started) {
+            _state.update { it.copy(error = "Could not start the microphone.") }
+            return
+        }
+        _state.update { it.copy(isRunning = true, error = null) }
         pollJob =
             viewModelScope.launch {
                 while (isActive) {
@@ -58,8 +65,16 @@ class TunerViewModel : ViewModel() {
 
     fun setTuning(tuningId: String) {
         if (tuner.setTuning(tuningId)) {
-            _state.update { it.copy(tuningId = tuningId) }
+            _state.update { it.copy(tuningId = tuningId, strum = null, chord = null) }
         }
+    }
+
+    fun analyseStrum() {
+        _state.update { it.copy(strum = tuner.analyseStrum()) }
+    }
+
+    fun recogniseChord() {
+        _state.update { it.copy(chord = tuner.recogniseChord()) }
     }
 
     override fun onCleared() {

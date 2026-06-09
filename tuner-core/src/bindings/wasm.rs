@@ -1,45 +1,16 @@
 //! Browser (wasm-bindgen) surface.
 //!
-//! Results cross the ABI as JSON strings — the simplest portable shape for the
-//! web worker to `JSON.parse`. The `wasm` feature implies `std`.
+//! Results cross the ABI as JSON strings (see [`super::json`]). The `wasm`
+//! feature implies `std`.
 
-use crate::cents::Direction;
-use crate::{Tuner, TunerConfig, TunerSnapshot};
+use super::json;
+use crate::{Tuner, TunerConfig};
 use wasm_bindgen::prelude::*;
 
 /// A tuner instance usable from JavaScript.
 #[wasm_bindgen]
 pub struct WasmTuner {
     inner: Tuner,
-}
-
-fn opt_f32(v: Option<f32>) -> String {
-    v.map_or_else(|| "null".into(), |x| format!("{x}"))
-}
-
-fn dir_str(d: Option<Direction>) -> String {
-    match d {
-        Some(Direction::Flat) => "\"flat\"".into(),
-        Some(Direction::InTune) => "\"in_tune\"".into(),
-        Some(Direction::Sharp) => "\"sharp\"".into(),
-        None => "null".into(),
-    }
-}
-
-fn opt_str(v: Option<&str>) -> String {
-    v.map_or_else(|| "null".into(), |s| format!("\"{s}\""))
-}
-
-fn snapshot_json(s: &TunerSnapshot) -> String {
-    format!(
-        "{{\"pitchHz\":{},\"centsOff\":{},\"direction\":{},\"nearestString\":{},\"nearestStringName\":{},\"confidence\":{}}}",
-        opt_f32(s.pitch_hz),
-        opt_f32(s.cents_off),
-        dir_str(s.direction),
-        s.nearest_string.map_or_else(|| "null".into(), |i| i.to_string()),
-        opt_str(s.nearest_string_name),
-        s.confidence,
-    )
 }
 
 #[wasm_bindgen]
@@ -77,44 +48,20 @@ impl WasmTuner {
     #[wasm_bindgen(js_name = snapshotJson)]
     #[must_use]
     pub fn snapshot_json(&self) -> String {
-        snapshot_json(&self.inner.snapshot())
+        json::snapshot_json(&self.inner.snapshot())
     }
 
     /// Strum report as JSON.
     #[wasm_bindgen(js_name = analyseStrumJson)]
     #[must_use]
     pub fn analyse_strum_json(&self) -> String {
-        let report = self.inner.analyse_strum();
-        let mut parts = Vec::with_capacity(report.strings.len());
-        for s in &report.strings {
-            parts.push(format!(
-                "{{\"index\":{},\"name\":\"{}\",\"targetHz\":{},\"detectedHz\":{},\"centsOff\":{},\"direction\":{},\"confidence\":{}}}",
-                s.string_index,
-                s.name,
-                s.target_hz,
-                opt_f32(s.detected_hz),
-                opt_f32(s.cents_off),
-                dir_str(s.direction),
-                s.confidence,
-            ));
-        }
-        format!("{{\"strings\":[{}]}}", parts.join(","))
+        json::strum_json(&self.inner.analyse_strum())
     }
 
     /// Chord recognition as JSON.
     #[wasm_bindgen(js_name = recogniseChordJson)]
     #[must_use]
     pub fn recognise_chord_json(&self) -> String {
-        let result = self.inner.recognise_chord();
-        let cands: Vec<String> = result
-            .candidates
-            .iter()
-            .map(|c| format!("{{\"name\":\"{}\",\"score\":{}}}", c.name, c.score))
-            .collect();
-        let best = result.best.map_or_else(
-            || "null".into(),
-            |b| format!("{{\"name\":\"{}\",\"score\":{}}}", b.name, b.score),
-        );
-        format!("{{\"candidates\":[{}],\"best\":{}}}", cands.join(","), best)
+        json::chord_json(&self.inner.recognise_chord())
     }
 }

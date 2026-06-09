@@ -5,10 +5,11 @@
 //! constructor signature `(FFIILjava/lang/String;F)V` must stay in lockstep
 //! with `Snapshot.kt`.
 
+use super::json;
 use crate::tunings;
 use crate::{Tuner, TunerConfig};
 use jni::objects::{JClass, JFloatArray, JString, JValue};
-use jni::sys::{jdouble, jfloat, jint, jlong, jobject};
+use jni::sys::{jdouble, jfloat, jint, jlong, jobject, jstring};
 use jni::JNIEnv;
 
 /// Reconstruct a `&mut Tuner` from a raw handle. Caller guarantees validity.
@@ -152,4 +153,42 @@ pub extern "system" fn Java_com_opentuner_NativeTuner_nativeSnapshot<'local>(
         Ok(obj) => obj.into_raw(),
         Err(_) => null,
     }
+}
+
+/// Build a Java string from `s`, or return a null `jstring` on failure.
+fn new_jstring(env: &JNIEnv<'_>, s: &str) -> jstring {
+    match env.new_string(s) {
+        Ok(js) => js.into_raw(),
+        Err(_) => core::ptr::null_mut(),
+    }
+}
+
+/// Analyse the buffered audio as a strum; returns a JSON string (see
+/// [`super::json::strum_json`]).
+#[no_mangle]
+pub extern "system" fn Java_com_opentuner_NativeTuner_nativeAnalyseStrumJson<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+) -> jstring {
+    let Some(tuner) = (unsafe { tuner_from_handle(handle) }) else {
+        return new_jstring(&env, "{\"strings\":[]}");
+    };
+    let payload = json::strum_json(&tuner.analyse_strum());
+    new_jstring(&env, &payload)
+}
+
+/// Recognise a chord from the buffered audio; returns a JSON string (see
+/// [`super::json::chord_json`]).
+#[no_mangle]
+pub extern "system" fn Java_com_opentuner_NativeTuner_nativeRecogniseChordJson<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+) -> jstring {
+    let Some(tuner) = (unsafe { tuner_from_handle(handle) }) else {
+        return new_jstring(&env, "{\"candidates\":[],\"best\":null}");
+    };
+    let payload = json::chord_json(&tuner.recognise_chord());
+    new_jstring(&env, &payload)
 }
