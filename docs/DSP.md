@@ -88,6 +88,32 @@ Chroma (Müller, 2007, *Information Retrieval for Music and Motion*).
   the runner-up `≥ min_margin` (0.05). Enharmonic chords (Csus2 == Gsus4) tie and
   so correctly report no single winner.
 
+## Chord voicings (fret diagrams)
+
+`fretboard.rs` turns a recognised chord into playable fingerings for the active
+tuning by searching the fretboard. Per string, the candidate frets are those in
+`0..=max_fret` whose pitch class is in the chord, plus "muted"; a depth-first
+search assembles voicings, pruned by hand span and finger count. A voicing is
+kept when only chord tones sound, every chord tone is covered, and the shape is
+playable (span ≤ 4 frets, ≤ 4 fingered strings, ≥ max(3, #tones) sounding).
+
+Voicings are ranked toward idiomatic shapes — in priority: no interior muted
+strings, root in the bass, lowest position, fewest fingers, fuller, least total
+fret distance — and the top few are returned. The search is tuning-agnostic
+(guitar, bass, guitarra portuguesa) and cheap enough to run live. The compact
+display form (`x 3 2 0 1 0`) is the voicing's fret-per-string array directly.
+
+## Live display smoothing (UI layer)
+
+Real-time strum/chord modes poll the same `analyse_strum()` / `recognise_chord()`
+continuously (~10 Hz). Smoothing lives in each shell (not the stateless core),
+with identical parameters:
+
+- **Strum:** per-string hold of the last reading with `confidence ≥ 0.2` for up
+  to 2 s, fading with age — so a string stays readable between pluck transients.
+- **Chord:** a new best is shown only after it persists ≥ 250 ms (debounce); the
+  last chord is held up to 1.5 s across brief gaps — preventing flicker.
+
 ## Noise handling
 
 - **DC blocker**: single-pole high-pass `y[n] = x[n] − x[n−1] + p·y[n−1]`,

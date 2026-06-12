@@ -37,6 +37,24 @@ change to their module:
 - MIDI↔Hz round-trips within a cent.
 - Every chord template self-recognises (by pitch-class set, since Sus2/Sus4 are
   enharmonic).
+- **Fret voicings** (`fretboard.rs`): every generated voicing sounds only chord
+  tones, covers the whole chord, and respects the span/finger limits; canonical
+  open shapes appear (C `x32010`, E `022100`, Am `x02210`); voicings adapt to
+  non-guitar tunings and are empty when nothing is playable.
+
+## Display smoothing
+
+The live-mode smoothers are pure and unit-tested on both shells
+(`SmoothingTest.kt`, `smoothing.test.ts`): a strum reading is held then dropped
+past the hold window and low-confidence readings are ignored; a chord is only
+shown after the debounce and is held across a brief gap then expires.
+
+## Foreign-function boundary
+
+The JNI surface is exercised end-to-end through a host-JVM harness that loads the
+real `libtuner_core.so` and calls every native method (pitch, strum, chord with
+voicings, the `Snapshot` constructor) — proving FFI signatures without needing a
+device, since the Android emulator can't always boot in CI/sandbox environments.
 
 ## The recorded corpus
 

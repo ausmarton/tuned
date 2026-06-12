@@ -26,10 +26,11 @@ place and identical across platforms.
 | `fft` | Hann window + magnitude spectrum |
 | `chroma` | log-magnitude chroma with triangular interpolation |
 | `chord` | quality enum, templates, recogniser |
+| `fretboard` | playable chord voicings for any tuning |
 | `strum` | per-string band-pass cascade + YIN |
 | `noise` | DC blocker, noise-floor tracker |
 | `tuner` | the `Tuner` facade (two ring buffers) |
-| `bindings` | feature-gated JNI and WASM surfaces |
+| `bindings` | feature-gated JNI and WASM surfaces (+ shared JSON) |
 
 ## The `Tuner` facade and `TunerConfig`
 
@@ -51,6 +52,22 @@ not permitted in const contexts on the crate's MSRV.
 DSP is single-threaded inside `tuner-core`; the host provides the thread. The
 audio callback pushes samples (lock-free on the host side) and the UI polls
 snapshots at a frame boundary (host-side mutex). The core itself holds no locks.
+
+## Host shells (live modes)
+
+Both shells present three modes — **Tune / Strum / Chords** — via bottom-tab
+navigation, and listen continuously while foreground. A single ~10 Hz poll loop
+reads the per-frame snapshot always and runs the active tab's strum/chord
+analysis. Smoothing (per-string hold, chord debounce/hold) lives in the shell,
+not the core, with identical parameters on Android (`Smoothing.kt`) and web
+(`smoothing.ts`). The screen is kept awake while listening (`keepScreenOn` /
+Screen Wake Lock), which also keeps the mic available.
+
+Chord recognition returns its result as JSON that now carries, for the active
+tuning, each candidate's `rootPc`/`quality`, fret `voicings`, and the tuning's
+string labels — so both shells render compact fingerings without duplicating the
+tuning table. The JSON serialisation is shared by the JNI and WASM surfaces
+(`bindings/json.rs`).
 
 ## Out of scope (MVP)
 

@@ -9,13 +9,24 @@ tested Rust DSP core that runs on Android (primary target) and in the browser
 
 ## Features
 
-- **Single-string tuning** with auto-detection of which string is being played
-  and which way it is off.
-- **Strum analysis** — strum all strings at once and get a per-string offset and
-  direction.
-- **Chord identification** — name a strummed or played chord.
-- Designed to work in **noisy environments** (DC blocker, noise-floor tracking,
-  per-string band-pass filtering).
+Three live modes (bottom-tab navigation), each listening continuously:
+
+- **Tune** — single-string tuning with auto-detection of which string is playing
+  and which way it's off, on a ±50-cent needle meter.
+- **Strum** — strum all strings and watch per-string offsets update in real time
+  (strum with one hand, tune with the other); readings hold briefly so they stay
+  legible between plucks.
+- **Chords** — live chord identification with compact fret fingerings
+  (`x 3 2 0 1 0`) for the active tuning, plus alternate matches.
+- The screen stays awake while listening, and it's designed for **noisy
+  environments** (DC blocker, noise-floor tracking, per-string band-pass).
+
+## Download
+
+Signed APKs are published on the [Releases](../../releases) page — download
+`opentuner-vX.Y.Z.apk` and sideload it (you may need to allow installs from your
+browser/files app). See [docs/RELEASING.md](docs/RELEASING.md) for how releases
+are built and signed.
 
 ## Architecture
 
@@ -84,9 +95,11 @@ npm test
 
 ## Documentation
 
+- [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) — product requirements (incl. v0.2 live modes)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layered design and threading model
 - [docs/DSP.md](docs/DSP.md) — signal-processing details and references
-- [docs/TESTING.md](docs/TESTING.md) — the seven-layer test strategy
+- [docs/TESTING.md](docs/TESTING.md) — the test strategy
+- [docs/RELEASING.md](docs/RELEASING.md) — signing, GitHub Releases, Play Store path
 - [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) — dev workflow and checks
 - [docs/INSTRUMENTS.md](docs/INSTRUMENTS.md) — tuning tables and sources
 
