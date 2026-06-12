@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -7,6 +8,19 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
+// Release signing: read from a gitignored keystore.properties locally, or from
+// environment variables in CI. When no keystore is configured, release builds
+// fall back to debug signing so assembleRelease still works (e.g. in PR CI).
+val keystoreProps =
+    Properties().apply {
+        val f = rootProject.file("keystore.properties")
+        if (f.exists()) f.inputStream().use { load(it) }
+    }
+val releaseStoreFile =
+    (keystoreProps.getProperty("storeFile") ?: System.getenv("KEYSTORE_FILE"))
+        ?.let { rootProject.file(it) }
+val hasReleaseSigning = releaseStoreFile?.exists() == true
+
 android {
     namespace = "com.opentuner"
     compileSdk = 34
@@ -14,10 +28,20 @@ android {
         applicationId = "com.opentuner"
         minSdk = 26 // Oboe / AAudio
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86") }
+    }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = keystoreProps.getProperty("storePassword") ?: System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = keystoreProps.getProperty("keyAlias") ?: System.getenv("KEY_ALIAS")
+                keyPassword = keystoreProps.getProperty("keyPassword") ?: System.getenv("KEY_PASSWORD")
+            }
+        }
     }
     buildTypes {
         debug { applicationIdSuffix = ".debug" }
@@ -27,6 +51,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = signingConfigs.getByName(if (hasReleaseSigning) "release" else "debug")
         }
     }
     compileOptions {
