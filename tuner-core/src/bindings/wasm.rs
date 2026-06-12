@@ -62,6 +62,6 @@ impl WasmTuner {
     #[wasm_bindgen(js_name = recogniseChordJson)]
     #[must_use]
     pub fn recognise_chord_json(&self) -> String {
-        json::chord_json(&self.inner.recognise_chord())
+        json::chord_json(&self.inner.recognise_chord(), self.inner.active_tuning())
     }
 }

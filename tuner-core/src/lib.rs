@@ -47,6 +47,7 @@ pub mod cents;
 pub mod chord;
 pub mod chroma;
 pub mod fft;
+pub mod fretboard;
 pub mod noise;
 pub mod pitch;
 pub mod strum;

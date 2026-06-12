@@ -189,6 +189,6 @@ pub extern "system" fn Java_com_opentuner_NativeTuner_nativeRecogniseChordJson<'
     let Some(tuner) = (unsafe { tuner_from_handle(handle) }) else {
         return new_jstring(&env, "{\"candidates\":[],\"best\":null}");
     };
-    let payload = json::chord_json(&tuner.recognise_chord());
+    let payload = json::chord_json(&tuner.recognise_chord(), tuner.active_tuning());
     new_jstring(&env, &payload)
 }

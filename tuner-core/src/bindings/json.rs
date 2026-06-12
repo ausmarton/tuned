@@ -4,8 +4,10 @@
 //! shape for a Kotlin / JavaScript caller to parse. Kept dependency-free.
 
 use crate::cents::Direction;
-use crate::chord::RecognitionResult;
+use crate::chord::{ChordMatch, RecognitionResult};
+use crate::fretboard::{voicings, Voicing, VoicingConfig};
 use crate::strum::StrumReport;
+use crate::tunings::Tuning;
 use crate::TunerSnapshot;
 use alloc::format;
 use alloc::string::String;
@@ -67,17 +69,54 @@ pub(super) fn strum_json(report: &StrumReport) -> String {
     format!("{{\"strings\":[{}]}}", parts.join(","))
 }
 
-/// Serialise a chord recognition result.
+fn voicing_json(v: &Voicing) -> String {
+    let parts: Vec<String> = v
+        .frets
+        .iter()
+        .map(|f| f.map_or_else(|| "null".into(), |x| alloc::string::ToString::to_string(&x)))
+        .collect();
+    format!("[{}]", parts.join(","))
+}
+
+/// Serialise one chord candidate, attaching fret voicings for `tuning` when
+/// `with_voicings` is set (only the top candidates carry voicings, to bound work).
+fn candidate_json(c: &ChordMatch, tuning: &Tuning, with_voicings: bool) -> String {
+    let voicings_json = if with_voicings {
+        let vs = voicings(
+            tuning.strings,
+            c.root_pc,
+            c.quality,
+            VoicingConfig::default(),
+        );
+        vs.iter().map(voicing_json).collect::<Vec<_>>().join(",")
+    } else {
+        String::new()
+    };
+    format!(
+        "{{\"name\":\"{}\",\"score\":{},\"rootPc\":{},\"quality\":\"{}\",\"voicings\":[{}]}}",
+        c.name,
+        c.score,
+        c.root_pc,
+        c.quality.suffix(),
+        voicings_json,
+    )
+}
+
+/// Serialise a chord recognition result, including fret voicings (for the active
+/// `tuning`) on the top few candidates and the best match.
 #[must_use]
-pub(super) fn chord_json(result: &RecognitionResult) -> String {
+pub(super) fn chord_json(result: &RecognitionResult, tuning: &Tuning) -> String {
+    // Compute voicings only for the leading candidates to keep live recognition cheap.
+    const WITH_VOICINGS: usize = 3;
     let cands: Vec<String> = result
         .candidates
         .iter()
-        .map(|c| format!("{{\"name\":\"{}\",\"score\":{}}}", c.name, c.score))
+        .enumerate()
+        .map(|(i, c)| candidate_json(c, tuning, i < WITH_VOICINGS))
         .collect();
-    let best = result.best.as_ref().map_or_else(
-        || "null".into(),
-        |b| format!("{{\"name\":\"{}\",\"score\":{}}}", b.name, b.score),
-    );
+    let best = result
+        .best
+        .as_ref()
+        .map_or_else(|| "null".into(), |b| candidate_json(b, tuning, true));
     format!("{{\"candidates\":[{}],\"best\":{}}}", cands.join(","), best)
 }
