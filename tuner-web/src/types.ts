@@ -23,14 +23,22 @@ export interface StrumReport {
   strings: StrumString[];
 }
 
+/** A playable chord shape: one fret per string, low → high (null = muted, 0 = open). */
+export type Voicing = (number | null)[];
+
 export interface ChordCandidate {
   name: string;
   score: number;
+  rootPc?: number;
+  quality?: string;
+  voicings?: Voicing[];
 }
 
 export interface ChordResult {
   candidates: ChordCandidate[];
   best: ChordCandidate | null;
+  /** String labels of the active tuning, low → high (for voicing columns). */
+  strings?: string[];
 }
 
 export const SUPPORTED_TUNINGS: ReadonlyArray<readonly [string, string]> = [

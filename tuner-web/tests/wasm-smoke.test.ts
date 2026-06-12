@@ -43,10 +43,11 @@ function makeFakeTuner(): WasmTunerShape {
     recogniseChordJson: () =>
       JSON.stringify({
         candidates: [
-          { name: "C", score: 0.99 },
-          { name: "Cmaj7", score: 0.95 },
+          { name: "C", score: 0.99, rootPc: 0, quality: "", voicings: [[null, 3, 2, 0, 1, 0]] },
+          { name: "Cmaj7", score: 0.95, rootPc: 0, quality: "maj7", voicings: [[null, 3, 2, 0, 0, 0]] },
         ],
-        best: { name: "C", score: 0.99 },
+        best: { name: "C", score: 0.99, rootPc: 0, quality: "", voicings: [[null, 3, 2, 0, 1, 0]] },
+        strings: ["E2", "A2", "D3", "G3", "B3", "E4"],
       }),
   };
 }
@@ -79,5 +80,8 @@ describe("wasm module shape", () => {
     const result = JSON.parse(tuner.recogniseChordJson()) as ChordResult;
     expect(result.best?.name).toBe("C");
     expect(result.candidates.length).toBeGreaterThan(1);
+    // Voicings + tuning string labels ride along for fret diagrams.
+    expect(result.best?.voicings?.[0]).toEqual([null, 3, 2, 0, 1, 0]);
+    expect(result.strings).toEqual(["E2", "A2", "D3", "G3", "B3", "E4"]);
   });
 });
