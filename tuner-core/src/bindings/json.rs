@@ -118,5 +118,17 @@ pub(super) fn chord_json(result: &RecognitionResult, tuning: &Tuning) -> String 
         .best
         .as_ref()
         .map_or_else(|| "null".into(), |b| candidate_json(b, tuning, true));
-    format!("{{\"candidates\":[{}],\"best\":{}}}", cands.join(","), best)
+    // String labels of the active tuning, so callers can label voicing columns
+    // without duplicating the tuning table.
+    let strings: Vec<String> = tuning
+        .strings
+        .iter()
+        .map(|s| format!("\"{}\"", s.name))
+        .collect();
+    format!(
+        "{{\"candidates\":[{}],\"best\":{},\"strings\":[{}]}}",
+        cands.join(","),
+        best,
+        strings.join(",")
+    )
 }
